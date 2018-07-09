@@ -1,0 +1,342 @@
+实现分页的功能:
+
+//========================实体封装
+
+
+
+import java.io.Serializable;
+ 
+/**
+ * 分页
+ */
+public class Page implements Serializable {
+ 
+	private static final long serialVersionUID = -3198048449643774660L;
+ 
+	private int pageNow = 1; // 当前页数
+ 
+	private int pageSize = 4; // 每页显示记录的条数
+ 
+	private int totalCount; // 总的记录条数
+ 
+	private int totalPageCount; // 总的页数
+ 
+	@SuppressWarnings("unused")
+	private int startPos; // 开始位置，从0开始
+ 
+	@SuppressWarnings("unused")
+	private boolean hasFirst;// 是否有首页
+ 
+	@SuppressWarnings("unused")
+	private boolean hasPre;// 是否有前一页
+ 
+	@SuppressWarnings("unused")
+	private boolean hasNext;// 是否有下一页
+ 
+	@SuppressWarnings("unused")
+	private boolean hasLast;// 是否有最后一页
+	
+	/**
+	 * 通过构造函数 传入  总记录数  和  当前页
+	 * @param totalCount
+	 * @param pageNow
+	 */
+	public Page(int totalCount, int pageNow) {
+		this.totalCount = totalCount;
+		this.pageNow = pageNow;
+	}
+	
+	/**
+	 * 取得总页数，总页数=总记录数/总页数
+	 * @return
+	 */
+	public int getTotalPageCount() {
+		totalPageCount = getTotalCount() / getPageSize();
+		return (totalCount % pageSize == 0) ? totalPageCount
+				: totalPageCount + 1;
+	}
+ 
+	public void setTotalPageCount(int totalPageCount) {
+		this.totalPageCount = totalPageCount;
+	}
+ 
+	public int getPageNow() {
+		return pageNow;
+	}
+ 
+	public void setPageNow(int pageNow) {
+		this.pageNow = pageNow;
+	}
+ 
+	public int getPageSize() {
+		return pageSize;
+	}
+ 
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+ 
+	public int getTotalCount() {
+		return totalCount;
+	}
+ 
+	public void setTotalCount(int totalCount) {
+		this.totalCount = totalCount;
+	}
+	/**
+	 * 取得选择记录的初始位置
+	 * @return
+	 */
+	public int getStartPos() {
+		return (pageNow - 1) * pageSize;
+	}
+ 
+	public void setStartPos(int startPos) {
+		this.startPos = startPos;
+	}
+ 
+	/**
+	 * 是否是第一页
+	 * @return
+	 */
+	public boolean isHasFirst() {
+		return (pageNow == 1) ? false : true;
+	}
+ 
+	public void setHasFirst(boolean hasFirst) {
+		this.hasFirst = hasFirst;
+	}
+	/**
+	 * 是否有首页
+	 * @return
+	 */
+	public boolean isHasPre() {
+		// 如果有首页就有前一页，因为有首页就不是第一页
+		return isHasFirst() ? true : false;
+	}
+ 
+	public void setHasPre(boolean hasPre) {
+		this.hasPre = hasPre;
+	}
+	/**
+	 * 是否有下一页
+	 * @return
+	 */
+	public boolean isHasNext() {
+		// 如果有尾页就有下一页，因为有尾页表明不是最后一页
+		return isHasLast() ? true : false;
+	}
+ 
+	public void setHasNext(boolean hasNext) {
+		this.hasNext = hasNext;
+	}
+	/**
+	 * 是否有尾页
+	 * @return
+	 */
+	public boolean isHasLast() {
+		// 如果不是最后一页就有尾页
+		return (pageNow == getTotalCount()) ? false : true;
+	}
+ 
+	public void setHasLast(boolean hasLast) {
+		this.hasLast = hasLast;
+	}
+ 
+}
+
+
+
+//==================Mapper层
+
+  <!-- 分页SQL语句 -->
+  <select id="selectProductsByPage" resultMap="返回值类型">
+    select 
+    *
+    from 表名 WHERE user_id = #{userId,jdbcType=INTEGER} limit #{startPos},#{pageSize} 
+  </select>
+  <!-- 取得记录的总数 -->
+  <select id="getProductsCount" resultType="long">
+    SELECT COUNT(*) FROM 表名 WHERE user_id = #{userId,jdbcType=INTEGER} 
+  </select>
+
+
+  //=========dao层
+
+   /**
+     * 使用注解方式传入多个参数，用户产品分页，通过登录用户ID查询
+     * @param page
+     * @param userId
+     * @return startPos},#{pageSize} 
+     */
+    public List<Products> selectProductsByPage(@Param(value="startPos") Integer startPos,@Param(value="pageSize") Integer pageSize,@Param(value="userId") Integer userId);
+    
+    /**
+     * 取得产品数量信息，通过登录用户ID查询
+     * @param userId
+     * @return
+     */
+    public long getProductsCount(@Param(value="userId") Integer userId);
+
+
+/**
+	 * 分页显示商品
+	 * @param request
+	 * @param model
+	 * @param loginUserId
+	 */
+	void showProductsByPage(HttpServletRequest request,Model model,int loginUserId);
+
+
+
+//===============service接口
+
+
+/**
+	 * 分页显示商品
+	 * @param request
+	 * @param model
+	 * @param loginUserId
+	 */
+	void showProductsByPage(HttpServletRequest request,Model model,int loginUserId);
+
+
+
+
+//=====service实现
+
+
+@Override
+public void showProductsByPage(HttpServletRequest request, Model model,int loginUserId) {
+	String pageNow = request.getParameter("pageNow");
+ 
+	Page page = null;
+ 
+	List<ProductWithBLOBs> products = new ArrayList<ProductWithBLOBs>();
+ 
+	int totalCount = (int) productDao.getProductsCount(loginUserId);
+ 
+	if (pageNow != null) {
+		page = new Page(totalCount, Integer.parseInt(pageNow));
+		allProducts = this.productDao.selectProductsByPage(page.getStartPos(), page.getPageSize(), loginUserId);
+	} else {
+		page = new Page(totalCount, 1);
+		allProducts = this.productDao.selectProductsByPage(page.getStartPos(), page.getPageSize(), loginUserId);
+	}
+ 
+	model.addAttribute("products", products);
+	model.addAttribute("page", page);
+}
+
+
+//=====controller的编写
+
+
+/**
+ * 初始化 “我的产品”列表 JSP页面,具有分页功能
+ * 
+ * @param request
+ * @param model
+ * @return
+ */
+@RequestMapping(value = "映射路径", method = RequestMethod.GET)
+public String showMyProduct(HttpServletRequest request, Model model) {
+	// 取得SESSION中的loginUser
+	User loginUser = (User) request.getSession().getAttribute("loginUser");
+	// 判断SESSION是否失效
+	if (loginUser == null || "".equals(loginUser)) {
+		return "redirect:/";
+	}
+ 
+	int loginUserId = loginUser.getUserId();
+	//此处的productService是注入的IProductService接口的对象
+	this.productService.showProductsByPage(request, model, loginUserId);
+ 
+	return "跳转到的JSP路径";
+}
+
+
+//==========jsp
+
+
+<!-- 分页功能 start -->
+	<div align="center">
+		<font size="2">共 ${page.totalPageCount} 页</font> <font size="2">第
+			${page.pageNow} 页</font> <a href="myProductPage?pageNow=1">首页</a>
+		<c:choose>
+			<c:when test="${page.pageNow - 1 > 0}">
+				<a href="myProductPage?pageNow=${page.pageNow - 1}">上一页</a>
+			</c:when>
+			<c:when test="${page.pageNow - 1 <= 0}">
+				<a href="myProductPage?pageNow=1">上一页</a>
+			</c:when>
+		</c:choose>
+		<c:choose>
+			<c:when test="${page.totalPageCount==0}">
+				<a href="myProductPage?pageNow=${page.pageNow}">下一页</a>
+			</c:when>
+			<c:when test="${page.pageNow + 1 < page.totalPageCount}">
+				<a href="myProductPage?pageNow=${page.pageNow + 1}">下一页</a>
+			</c:when>
+			<c:when test="${page.pageNow + 1 >= page.totalPageCount}">
+				<a href="myProductPage?pageNow=${page.totalPageCount}">下一页</a>
+			</c:when>
+		</c:choose>
+		<c:choose>
+			<c:when test="${page.totalPageCount==0}">
+				<a href="myProductPage?pageNow=${page.pageNow}">尾页</a>
+			</c:when>
+			<c:otherwise>
+				<a href="myProductPage?pageNow=${page.totalPageCount}">尾页</a>
+			</c:otherwise>
+		</c:choose>
+	</div>
+	<!-- 分页功能 End -->
+
+
+
+
+
+//========查询分页
+
+
+/**
+	 * 通过 产品名称 查询产品
+	 * @param request
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "映射地址", method = RequestMethod.GET)
+	public String searchForProducts(HttpServletRequest request, Model model) {
+		HttpSession session = request.getSession();
+ 
+		String param = request.getParameter("param");
+ 
+		String condition = (String) session.getAttribute("condition");
+ 
+		//先判断SESSION中的condition是否为空
+		if (condition == null) {
+			condition = new String();
+			session.setAttribute("condition", condition);
+			//如果Session中的condition为空，再判断传入的参数是否为空，如果为空就跳转到搜索结果页面
+			if (param == null || "".equals(param)) {
+				return "private/space/ProductSearchResult";
+			}
+		}
+		//如果SESSION不为空，且传入的搜索条件param不为空，那么将param赋值给condition
+		if (param != null && !("".equals(param))) {
+			condition = param;
+			session.setAttribute("condition", condition);
+		}
+		//使用session中的condition属性值来作为查询条件
+		this.productService.showSearchedProductsByPage(request, model, condition);
+ 
+		return "跳转的页面";
+	}
+
+
+
+
+
+
+
