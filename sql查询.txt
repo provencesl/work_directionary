@@ -1,0 +1,40 @@
+function display_children（$ parent，$ level）{
+    $ result = mysql_query（“SELECT a.id，a.label，a.link，Deriv1.Count FROM`menu`一个LEFT OUTER JOIN（SELECT parent，COUNT（*）AS Count FROM`menu` GROUP BY parent）Deriv1 ON a.id = Deriv1.parent WHERE a.parent =“。$ parent）;
+    echo“<ul>”;
+    while（$ row = mysql_fetch_assoc（$ result））{
+        if（$ row ['Count']> 0）{
+            echo“<li> <a href ='”。$ row ['link']。“'>”。$ row ['label']。“</A>”;
+			display_children（$ row ['id']，$ level + 1）;
+			echo“</ li>”;
+        } elseif（$ row ['Count'] == 0）{
+            echo“<li> <a href ='”。$ row ['link']。“'>”。$ row ['label']。“</A> </ LI>”;
+        }其他
+    }
+    echo“</ ul>”;
+}
+
+
+
+while（$ row = mysql_fetch_assoc（$ result））{
+	if（$ row ['Count']> 0）{
+		echo“<li> <a href ='”。$ row ['link']。“'>”。$ row ['label']。“</A>”;
+		display_children（$ row ['id']，$ level + 1）;
+		echo“</ li>”;
+	} elseif（$ row ['Count'] == 0）{
+		echo“<li> <a href ='”。$ row ['link']。“'>”。$ row ['label']。“</A> </ LI>”;
+	}其他
+}
+
+
+家
+	码
+		PHP
+			脚本
+				档案
+
+
+
+
+
+
+

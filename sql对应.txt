@@ -1,0 +1,41 @@
+java注入数据库
+
+
+java类型   mysql类型        成功与否
+date         date               yes
+date         time               no
+date         timestamp       no
+date         datetime         no
+
+time         date               no
+time         time               yes
+time         timestamp       no
+time         datetime         no
+
+timestamp date              yes
+timestamp time              yes
+timestamp timestamp     yes
+timestamp datetime        yes
+==========end java注入数据库========
+
+
+
+==========从数据库提取到java ==========
+
+mysql类型    java类型     成与否
+date             date         yes
+date             time         yes --------------缺少的部分使用历元
+date           timestamp   yes --------------缺少的部分使用历元  
+
+time           date           yes --------------缺少的部分使用历元
+time           time           yes
+time          timestamp    yes --------------缺少的部分使用历元
+
+timestamp date           yes
+timestamp time           yes
+timestamp timestamp   yes
+
+datetime      date         yes
+datetime      time         yes
+datetime    timestamp   yes
+==========end 从数据库提取到java=======

@@ -1,0 +1,14 @@
+create database work_directionary;
+
+create table knowledge_point(
+id int(11) not null,
+KnowledgeCategoryId int(11) not null,
+KnowledgePoint varchar(25) not null,
+DESC varchar(25) not null,
+Status TinyInt(1) not null,
+ParentId int(11) not null,
+Level TinyInt(1) not null,
+primary key(id)
+);
+
+
