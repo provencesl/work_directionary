@@ -1,0 +1,87 @@
+DAO：
+
+public interface ArticleDAO {
+
+	public int insert(Article article);
+
+	public int update(Article article);
+
+	public Article loadById(int id);
+
+	public int updateStoreAndComment(Article article);
+	
+	public List<Article> getArticleListByPositionId(int positionId, int pageId, int size);
+	
+	public List<Article> getBigArticleListByPositionId(int positionId, int size);
+
+	public List<Article> getTopArticleList(int size);
+}
+
+
+
+getArticleListByPositionId(int positionId,int pageId,int size)：
+
+mysql分页：select * from limit ?,?
+
+
+
+
+
+
+
+
+
+
+
+
+@Repository
+public class ArticleDAOImpl implements ArticleDAO {
+	@Resource(name = "sqlSessionTemplate")
+	private SqlSessionTemplate sst;
+
+	private final String namespace = "R.article.";
+
+	@Override
+	public Article loadById(int id) {
+		return sst.selectOne(namespace + "loadById", id);
+	}
+
+	@Override
+	public int insert(Article article) {
+		return sst.insert(namespace + "insert", article);
+	}
+
+	@Override
+	public int update(Article article) {
+		return sst.update(namespace + "update", article);
+	}
+
+	@Override
+	public int updateStoreAndComment(Article article) {
+		return sst.update(namespace + "updateStoreAndComment", article);
+	}
+
+	@Override
+	public List<Article> getArticleListByPositionId(int positionId, int pageId,int size) {
+		Map<String, Integer> params = new HashMap<String, Integer>();
+		params.put("positionId", positionId);
+		params.put("offset", (pageId - 1) * size);
+		params.put("size", size);
+		return sst.selectList(namespace + "getArticleListByPositionId", params);
+	}
+
+	@Override
+	public List<Article> getTopArticleList(int size) {
+		return sst.selectList(namespace + "getTopArticleList", size);
+	}
+
+	@Override
+	public List<Article> getBigArticleListByPositionId(int positionId, int size) {
+		Map<String, Integer> params = new HashMap<String, Integer>();
+		params.put("positionId", positionId);
+		params.put("size", size);
+		return sst.selectList(namespace + "getBigArticleListByPositionId",
+				params);
+	}
+
+}
