@@ -1,0 +1,177 @@
+KnowledgePointServiceImpl下的comefrom()
+
+
+SSM的通用分页实现分析：
+
+
+
+
+
+
+
+
+controller返回视图：
+
+htmlView()-->BaseController:
+
+
+package com.rdaxue.web.controller;
+
+import java.net.URLEncoder;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.rdaxue.intf.NotificationService;
+import com.rdaxue.intf.constant.CookieConstant;
+import com.rdaxue.intf.model.User;
+
+public class BaseController {
+     
+	static final Logger log = Logger.getLogger(BaseController.class);
+	
+	protected static final String SUCCESS = "success";
+	protected static final String FAIL = "fail";
+	protected static final int SUCCESS_ID = 1;
+	protected static final int FAIL_ID = 0;
+	
+	
+	@Value("@{envName}")	
+	protected String envName;
+	@Value("@{domain}")	
+	protected String DOMAIN;
+	@Value("@{yike.home.url}")	
+	protected String NET_PREFIX;
+	@Value("@{oss.prefix.url}")
+	protected String OSS_PREFIX_URL;	
+    
+    @Resource
+    private NotificationService notificationService;
+	 
+	// 返回html视图
+	protected ModelAndView htmlView(String pageLocation, Map<String, Object> params,HttpServletResponse response, HttpSession session) {
+		ModelAndView mv = new ModelAndView(pageLocation);
+		ModelMap mmap = mv.getModelMap();
+		if (params != null && params.size() != 0) {
+			for (Map.Entry<String, Object> map : params.entrySet()) {
+				mmap.addAttribute(map.getKey(), map.getValue());
+			}
+		}
+		User user = getUserFromSession(session);
+		mmap.addAttribute("NET_PREFIX", NET_PREFIX);
+		mmap.addAttribute("OSS_PREFIX_URL",OSS_PREFIX_URL);
+		mmap.put("showIsLoginedIn", user==null?false:true);		
+		mmap.put("user", user);
+		int messageNum = getMessagenumFromSession(session, user);
+		int num = messageNum<=0?0:messageNum;
+		mmap.put("messageNum",num);
+		response.setContentType("text/html;charset=utf-8");
+		return mv;
+	}
+	
+	/**
+	 * @param session
+	 * 登录后需要把User，放到session里
+	 * @return
+	 */
+	protected User getUserFromSession(HttpSession session) {
+	    User user = (User) session.getAttribute(CookieConstant.USER);
+	    return user;
+	}
+	
+	/**
+	 * @param session
+	 * 用于页尾栏的消息数量
+	 * @return
+	 */
+	protected int getMessagenumFromSession(HttpSession session , User user) {
+	    try {
+	    	if(user == null){
+	    		return 0;
+	    	}
+	    	//为方便逻辑，数据库数量为0时session里记为-1，所以session值为0时，表明还未查询过
+	    	Integer num =  (Integer) session.getAttribute(CookieConstant.MESSAGE_NUM);
+	    	if(num == null || num == 0){
+	    		num = notificationService.loadNotReadNumByUserId(user.getId());
+	    		session.setAttribute(CookieConstant.MESSAGE_NUM, num>0?num:-1 );
+	    	}
+			return num;
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+	
+	protected void showErrorPage(String errorMsg, String redirectUrl1,
+			String redirectUrl2, String urlMsg1, String urlMsg2, HttpServletResponse response) {
+		if(StringUtils.isEmpty(errorMsg)){
+			errorMsg = "未知错误";
+		}
+		if(StringUtils.isEmpty(redirectUrl1)){
+			redirectUrl1 = NET_PREFIX;
+		}
+		if(StringUtils.isEmpty(redirectUrl2)){
+			redirectUrl2 = NET_PREFIX;
+		}
+		if(StringUtils.isEmpty(urlMsg1)){
+			urlMsg1 = "返回上一页";
+		}
+		if(StringUtils.isEmpty(urlMsg2)){
+			urlMsg2 = "返回首页";
+		}
+		StringBuffer buffer = new StringBuffer();
+		try {
+			buffer.append("errorMsg=");
+			buffer.append(URLEncoder.encode(errorMsg, "utf-8"));
+			buffer.append("&redirect1=");
+			buffer.append(URLEncoder.encode(redirectUrl1, "utf-8"));
+			buffer.append("&redirect2=");
+			buffer.append(URLEncoder.encode(redirectUrl2, "utf-8"));
+			buffer.append("&title1=");
+			buffer.append(URLEncoder.encode(urlMsg1, "utf-8"));
+			buffer.append("&title2=");
+			buffer.append(URLEncoder.encode(urlMsg2, "utf-8"));
+			response.setCharacterEncoding("utf-8");
+			log.info("request info =:" + buffer.toString());
+			response.sendRedirect("/Error?"+buffer.toString());
+		} catch (Exception e) {
+			log.error("failed to show error", e);
+		}		
+	}	
+	    
+
+	public String getEnvName() {
+		return envName;
+	}
+
+	public void setEnvName(String envName) {
+		this.envName = envName;
+	}
+	
+	public String getDOMAIN() {
+		return DOMAIN;
+	}
+
+	public void setDOMAIN(String dOMAIN) {
+		DOMAIN = dOMAIN;
+	}	
+
+	public String getNET_PREFIX() {
+		return NET_PREFIX;
+	}
+
+	public void setNET_PREFIX(String nET_PREFIX) {
+		NET_PREFIX = nET_PREFIX;
+	}	
+	
+}
+
+
+
