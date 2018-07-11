@@ -1,0 +1,56 @@
+DAO:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public interface KnowledgePointDAO {
+
+    int insert(KnowledgePoint knowledgePoint);               
+
+    KnowledgePoint loadById(int knowledgePointId);
+
+    KnowledgePointDO loadPointDOById(int knowledgePointId);
+
+    int update(KnowledgePoint knowledgePoint);
+
+    List<KnowledgePoint> loadListByKnowledgeCatagoryId(int knowledgeCatagoryId,int lastId,int size);
+
+    List<KnowledgePoint> loadListByParentId(int parentId,int stage);
+
+    public List<KnowledgePoint> loadParentPointListByCatagoryId(int categoryId);
+
+    List<KnowledgePointDO> loadTopWeekList(int size);
+}
+
+1.insert():插入知识点对象
+2.loadById():通过自增主键查询实体对象
+3.loadPointDOById():
+4.update():更新实体
+《--------------------通过不同需求进行分页查询》
+5.loadListByKnowledgeCatagoryId():通过目录id分组查询 lastId：M站
+6.loadListByParentId():
+7.loadParentPointListByCatagoryId():通过目录id查询父级知识点id
