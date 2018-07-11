@@ -30,9 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.rdaxue.intf.NotificationService;
-import com.rdaxue.intf.constant.CookieConstant;
-import com.rdaxue.intf.model.User;
+
 
 public class BaseController {
      
