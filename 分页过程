@@ -1,0 +1,65 @@
+dao：
+
+inter:
+
+	public List<Article> getArticleListByPositionId(int positionId, int pageId, int size);
+  
+  
+impl:
+
+@Override
+	public List<Article> getArticleListByPositionId(int positionId, int pageId,int size) {
+		Map<String, Integer> params = new HashMap<String, Integer>();
+		params.put("positionId", positionId);
+		params.put("offset", (pageId - 1) * size);
+		params.put("size", size);
+		return sst.selectList(namespace + "getArticleListByPositionId", params);
+	}
+  
+  
+mapper:
+
+	<select id="getArticleListByPositionId" resultMap="result" parameterType="java.util.HashMap">
+			SELECT id,tiTle,subTitle,userId,userName,status,type,cover,position,storeTimes,commentTimes,addTime,updateTime 
+			FROM yike_article
+			WHERE
+			<if test = "positionId != 0">
+				position = #{positionId:INTEGER} and 
+			</if>
+			Status != 0 and Type = 1
+			order by  AddTime desc
+		<if test="size != 0">
+	        LIMIT <if test="offset != 0">#{offset:INTEGER},</if> #{size:INTEGER}
+	 	</if>
+	</select>
+  
+  service:
+  
+  
+  	/**
+	 * 根据职位取职位列表
+	 * @param positionId
+	 * @param pageId  如果pageId为1， 则需另外加载type为2的article
+	 * @param size
+	 * @return
+	 */
+	public List<ArticleDO> getArticleListByPositionId(int positionId, int pageId, int size); 
+  
+  
+  service.impl:
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
