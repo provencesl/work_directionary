@@ -1,0 +1,21 @@
+1.Jquery Ajax的局部刷新与全局刷新问题：
+
+
+
+
+2.关注的实现与数据表
+
+三级知识点的文章
+
+1.knowledge_category
+2.knowledge_point
+3.knowledge_point_attention
+
+
+1.
+(id CategoryName BuninessId Desc Status PositionType TotalExamNum IconName AddTime UpdateTime)
+2.
+(id,knowledgeCategoryId,knowledgePoint,Desc,Status,ParentId,Cover,Level,Range,BiLevel,MianLevel,TopTimes,commentTimes,
+ClassNum,WendaNum,TotalExaNum,AddTime,UpdateTime)
+3.
+(id,pointId,UserId,PositionId,Status,AddTime,UpdateTime)
