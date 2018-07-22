@@ -1,0 +1,34 @@
+实现锚点：
+
+<html>
+<script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.js"></script>
+
+<script>
+
+$(function(){
+	$(".nav").click(function(){
+
+		$("html,body").animate({scrollTop: $("#elementid").offset().top}, 1000);
+		
+	});
+})
+
+</script>
+
+<a href="#2F" name="1F" class="nav">锚点1</a> 
+<div name="1F"> 
+<p> 
+11111111111 
+</br> 
+11111111111 
+</br>11111111111 
+
+</br>11111111111 
+<div class="nav-jump" id="elementid"><p>描述</p></div>
+<div id="2F">
+	你好！
+</div>
+</br> 
+</p> 
+</div> 
+</html>
