@@ -1,0 +1,24 @@
+发布内容，把内容event_id推送到follower的队列。
+
+step1 ： 发布内容，插入到表status
+
+step2 : 把创建操作首相为事件，插入到event表中。
+
+查阅：https://ruby-china.org/topics/37559
+
+
+
+Feed流的MySQL设计：
+
+1）event可能发到多表之中
+2） MySQL没有队列【queue】，利用关系表模拟queue
+3）各个关系表中读取feed内容，按照event_id逆序排序，不担心关系表的写入顺序
+
+select * from mention_feeds where user_id = 1 
+order by event_id desc
+
+4)MYSQL容量不存在问题，主键为big integer单张表的最大容量是10 bullion billion,
+大部分百万级业务使用MYSQL游刃有余。
+
+5）为了应对不同的业务逻辑，可以创建各种关系表
+6）建立个关系表的索引
