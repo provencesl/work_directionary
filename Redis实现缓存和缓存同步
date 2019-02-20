@@ -14,3 +14,24 @@ Redis缓存方式：
 MySQL同步到Redis，大多数都是这样，将数据库变化同步到Redis,显得比较可靠，Redis只作为缓存。
 
 1）
+
+
+
+    读写部分
+
+    if(redis){
+        读取redis数据
+    }else{
+        数据库读取，存redis+设置超时时间
+    }
+
+    更新部分
+
+    if(数据库update){
+        更新redis+设置超时时间
+    }
+    
+    
+    https://blog.csdn.net/pbrlovejava/article/details/82050033
+    
+    https://blog.csdn.net/tennysonsky/article/details/78205453
