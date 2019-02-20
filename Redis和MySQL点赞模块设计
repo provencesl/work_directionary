@@ -1,0 +1,71 @@
+点赞设计：
+
+存储两种数据：
+1）记录点赞人，被点赞人，点赞状态的数据
+2）每个用户被点赞了多少次，计数
+
+记录点赞人和被点赞人和点赞状态【点赞，取消点赞】
+固定时间间隔取出Redis所有点赞数据，分析得出Redis数据格式中Hash最为合适。
+
+redis存储hash：
+
+hash类型可以当做是具有 String key 和String value的map容器，非常适合存储对象信息。
+比如说：UserName, Password,Age等
+
+如果Hash中包含很少的字段，那么该类型的数据也将仅占用很少的磁盘空间。每个Hash可以存储 4294967295 个键值对。
+
+redis存储示意图：
+
+key1  field1_1  value1_!
+
+
+赋值：
+1） hset key field value
+
+含义：
+为key设置 field/value对（键值对）
+
+hmset key field value fied2  value2 .....
+
+含义：
+设置key 的多个 field/value对（键值对）
+
+取值：
+hget key field
+
+含义：
+返回指定key中的field的值
+127.0.0.1:6379> hget myhash name
+"qiwenming"
+
+hmget key field1 field2.....
+含义：
+获取多个 field的值
+
+127.0.0.1:6379> hmget myhash username age gender
+1) "wiming"
+2) "18"
+3) "1"
+
+hgetall key
+含义：
+获取key中所有的 field-value
+
+hdel key field1 field2 ....
+含义：
+删除一个或者多个字段。返回值是被删除的字段个数
+
+
+
+
+1、Mysql作为主存储服务器，Redis作为缓存，需要实时将需要缓存的mysql数据同步到Redis
+实现机制：
+如果对Mysql性能要求较高，可以解析Mysql binlog日志，然后将数据写入消息队列，再同步到Redis。此种方案需要熟悉binlog日志格式，相对复杂。
+如果性能要求不高，简单起见，可以使用Mysql UDF+触发器方式，将变化的数据写入消息队列，再同步到Redis。
+
+2、Redis为主存储服务器，Mysql为从服务器，Mysql用作统计分析等场合，需要将Redis数据同步到Mysql（一般定时/准实时即可）
+实现机制：
+可以在Redis中创建多个zset，每个zset与mysql表对应，score用unix时间戳（整数）,zset用于存放近期insert/update/delete的记录。
+然后定期服务定时扫描zset，用时间戳排序，同时查询定时服务的同步日志（可以在Redis中用hash或其他结构存储），获取上一次同步操作以来insert/update/delete的记录，然后同步到mysql。
+
+
