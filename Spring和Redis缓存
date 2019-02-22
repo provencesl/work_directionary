@@ -1,0 +1,25 @@
+一般在Service层添加缓存：
+
+public List<RoleResource> getTreeGrid() { 
+    //从缓存中获取内容 
+    try { 
+      String cachString = jedisClientSingleService.hget(ALL_RESOURCES_NO_CONDITION, hashId); 
+      if(!StringUtils.isBlank(cachString)){ 
+        List<RoleResource> list = JsonUtils.jsonStrToList(cachString, RoleResource.class) ; 
+        return list ; 
+      } 
+    } catch (Exception e) { 
+      e.printStackTrace(); 
+    } 
+      
+    List<RoleResource> list =sessionFactory.openSession().selectList("cn.sys.auth.entity.ResourcesMapper.getTreeGrid"); 
+    //将缓存中添加缓存 
+    try { 
+      //redsi只存字符串，把list转换换成字符串 
+      String cachString =JsonUtils.toJson(list) ; 
+      jedisClientSingleService.hset(ALL_RESOURCES_NO_CONDITION, hashId, cachString) ; 
+    } catch (Exception e) { 
+      e.printStackTrace(); 
+    } 
+    return list; 
+  }
