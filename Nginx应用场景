@@ -1,0 +1,11 @@
+Nginx作为静态资源web服务：
+1）动态资源和静态资源
+
+静态资源：
+
+    浏览器渲染：HTML、CSS、JAVASCRIPT
+    图片：JPEG、GIF、PNG ...
+    视频：FLV、MPEG ...
+    文件：TXT、等任意下载文件
+    
+2）CDN(Content Delivery Network)内容分发网络
