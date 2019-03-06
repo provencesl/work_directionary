@@ -1,0 +1,430 @@
+WebSocket实时消息推送技术：
+
+
+消息推送的实现原理和方式：
+
+实时性较强的场景：
+1）在线聊天
+2）监控报警
+3）视频弹幕
+
+基于Http的实时消息方案：
+
+1）AJAX轮询（POLLING）:客户端不断发送请求到服务器
+2）长轮询(LONGPOLLING):一般30s超时
+3）异步Streaing
+4)iframe数据量
+
+全双工：数据发送和接受可以同时进行的
+当然，Http协议不具备全双工特性。
+
+
+SpringMVC整合WebSocket实现实时消息推送和触发：
+=================================
+
+
+
+创建websocket握手协议后台：
+
+HandShake实现类：
+
+/**
+ *Project Name: price
+ *File Name:    HandShake.java
+ *Package Name: com.yun.websocket
+ *Date:         2016年9月3日 下午4:44:27
+ *Copyright (c) 2016,578888218@qq.com All Rights Reserved.
+*/
+ 
+package com.yun.websocket;
+ 
+import java.util.Map;
+ 
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeInterceptor;
+ 
+/**
+ *Title:      HandShake<br/>
+ *Description:
+ *@Company:   青岛励图高科<br/>
+ *@author:    刘云生
+ *@version:   v1.0
+ *@since:     JDK 1.7.0_80
+ *@Date:      2016年9月3日 下午4:44:27 <br/>
+*/
+public class HandShake implements HandshakeInterceptor{
+ 
+	@Override
+	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
+			Map<String, Object> attributes) throws Exception {
+		// TODO Auto-generated method stub
+		String jspCode = ((ServletServerHttpRequest) request).getServletRequest().getParameter("jspCode");
+		// 标记用户
+		//String userId = (String) session.getAttribute("userId");
+		if(jspCode!=null){
+			attributes.put("jspCode", jspCode);
+		}else{
+			return false;
+		}
+		return true;
+	}
+ 
+	@Override
+	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
+			Exception exception) {
+		// TODO Auto-generated method stub
+		
+	}
+ 
+}
+
+=========================================
+
+MyWebSocketConfig实现类：
+
+
+/**
+ *Project Name: price
+ *File Name:    MyWebSocketConfig.java
+ *Package Name: com.yun.websocket
+ *Date:         2016年9月3日 下午4:52:29
+ *Copyright (c) 2016,578888218@qq.com All Rights Reserved.
+*/
+ 
+package com.yun.websocket;
+ 
+import javax.annotation.Resource;
+ 
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+ 
+/**
+ *Title:      MyWebSocketConfig<br/>
+ *Description:
+ *@Company:   青岛励图高科<br/>
+ *@author:    刘云生
+ *@version:   v1.0
+ *@since:     JDK 1.7.0_80
+ *@Date:      2016年9月3日 下午4:52:29 <br/>
+*/
+@Component
+@EnableWebMvc
+@EnableWebSocket
+public class MyWebSocketConfig extends WebMvcConfigurerAdapter implements WebSocketConfigurer{
+   @Resource
+	MyWebSocketHandler handler;
+	
+	@Override
+	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+		// TODO Auto-generated method stub
+		registry.addHandler(handler, "/wsMy").addInterceptors(new HandShake());
+		registry.addHandler(handler, "/wsMy/sockjs").addInterceptors(new HandShake()).withSockJS();
+	}
+ 
+}
+
+==================================================
+
+MyWebSocketHandler实现类：
+
+/**
+ *Project Name: price
+ *File Name:    MyWebSocketHandler.java
+ *Package Name: com.yun.websocket
+ *Date:         2016年9月3日 下午4:55:12
+ *Copyright (c) 2016,578888218@qq.com All Rights Reserved.
+*/
+ 
+package com.yun.websocket;
+ 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+ 
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
+ 
+import com.google.gson.GsonBuilder;
+ 
+/**
+ *Title:      MyWebSocketHandler<br/>
+ *Description:
+ *@Company:   青岛励图高科<br/>
+ *@author:    刘云生
+ *@version:   v1.0
+ *@since:     JDK 1.7.0_80
+ *@Date:      2016年9月3日 下午4:55:12 <br/>
+*/
+@Component
+public class MyWebSocketHandler implements WebSocketHandler{
+ 
+	public static final Map<String, WebSocketSession> userSocketSessionMap;
+ 
+	static {
+		userSocketSessionMap = new HashMap<String, WebSocketSession>();
+	}
+	
+	
+	@Override
+	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+		// TODO Auto-generated method stub
+		String jspCode = (String) session.getHandshakeAttributes().get("jspCode");
+		if (userSocketSessionMap.get(jspCode) == null) {
+			userSocketSessionMap.put(jspCode, session);
+		}
+		for(int i=0;i<10;i++){
+			//broadcast(new TextMessage(new GsonBuilder().create().toJson("\"number\":\""+i+"\"")));
+			session.sendMessage(new TextMessage(new GsonBuilder().create().toJson("\"number\":\""+i+"\"")));
+		}
+	}
+ 
+	@Override
+	public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+		// TODO Auto-generated method stub
+		//Message msg=new Gson().fromJson(message.getPayload().toString(),Message.class);
+		//msg.setDate(new Date());
+//		sendMessageToUser(msg.getTo(), new TextMessage(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJson(msg)));
+		
+		session.sendMessage(message);
+	}
+ 
+	@Override
+	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+		// TODO Auto-generated method stub
+		if (session.isOpen()) {
+			session.close();
+		}
+		Iterator<Entry<String, WebSocketSession>> it = userSocketSessionMap
+				.entrySet().iterator();
+		// 移除Socket会话
+		while (it.hasNext()) {
+			Entry<String, WebSocketSession> entry = it.next();
+			if (entry.getValue().getId().equals(session.getId())) {
+				userSocketSessionMap.remove(entry.getKey());
+				System.out.println("Socket会话已经移除:用户ID" + entry.getKey());
+				break;
+			}
+		}
+	}
+ 
+	@Override
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+		// TODO Auto-generated method stub
+		System.out.println("Websocket:" + session.getId() + "已经关闭");
+		Iterator<Entry<String, WebSocketSession>> it = userSocketSessionMap
+				.entrySet().iterator();
+		// 移除Socket会话
+		while (it.hasNext()) {
+			Entry<String, WebSocketSession> entry = it.next();
+			if (entry.getValue().getId().equals(session.getId())) {
+				userSocketSessionMap.remove(entry.getKey());
+				System.out.println("Socket会话已经移除:用户ID" + entry.getKey());
+				break;
+			}
+		}
+	}
+ 
+	@Override
+	public boolean supportsPartialMessages() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	/**
+	 * 群发
+	 * @Title:       broadcast  
+	 * @Description: TODO  
+	 * @param:       @param message
+	 * @param:       @throws IOException
+	 * @return:      void
+	 * @author:      刘云生
+	 * @Date:        2016年9月10日 下午4:23:30   
+	 * @throws
+	 */
+	public void broadcast(final TextMessage message) throws IOException {
+		Iterator<Entry<String, WebSocketSession>> it = userSocketSessionMap
+				.entrySet().iterator();
+ 
+		// 多线程群发
+		while (it.hasNext()) {
+ 
+			final Entry<String, WebSocketSession> entry = it.next();
+ 
+			if (entry.getValue().isOpen()) {
+				new Thread(new Runnable() {
+ 
+					public void run() {
+						try {
+							if (entry.getValue().isOpen()) {
+								entry.getValue().sendMessage(message);
+							}
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+ 
+				}).start();
+			}
+ 
+		}
+	}
+	
+	/**
+	 * 给所有在线用户的实时工程检测页面发送消息
+	 * 
+	 * @param message
+	 * @throws IOException
+	 */
+	public void sendMessageToJsp(final TextMessage message,String type) throws IOException {
+		Iterator<Entry<String, WebSocketSession>> it = userSocketSessionMap
+				.entrySet().iterator();
+ 
+		// 多线程群发
+		while (it.hasNext()) {
+ 
+			final Entry<String, WebSocketSession> entry = it.next();
+			if (entry.getValue().isOpen() && entry.getKey().contains(type)) {
+				new Thread(new Runnable() {
+ 
+					public void run() {
+						try {
+							if (entry.getValue().isOpen()) {
+								entry.getValue().sendMessage(message);
+							}
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+ 
+				}).start();
+			}
+ 
+		}
+	}
+}
+
+==============================================
+
+创建websocket握手处理的前台：
+
+<script>
+	var path = '<%=basePath%>';
+	var userId = 'lys';
+	if(userId==-1){
+		window.location.href="<%=basePath2%>";
+	}
+	var jspCode = userId+"_AAA";
+	var websocket;
+	if ('WebSocket' in window) {
+		websocket = new WebSocket("ws://" + path + "wsMy?jspCode=" + jspCode);
+	} else if ('MozWebSocket' in window) {
+		websocket = new MozWebSocket("ws://" + path + "wsMy?jspCode=" + jspCode);
+	} else {
+		websocket = new SockJS("http://" + path + "wsMy/sockjs?jspCode=" + jspCode);
+	}
+	websocket.onopen = function(event) {
+		console.log("WebSocket:已连接");
+		console.log(event);
+	};
+	websocket.onmessage = function(event) {
+		var data = JSON.parse(event.data);
+		console.log("WebSocket:收到一条消息-norm", data);
+		alert("WebSocket:收到一条消息");
+	};
+	websocket.onerror = function(event) {
+		console.log("WebSocket:发生错误 ");
+		console.log(event);
+	};
+	websocket.onclose = function(event) {
+		console.log("WebSocket:已关闭");
+		console.log(event);
+	}
+</script>
+====================================
+
+通过Controller调用websocket后台推送：
+
+
+
+    /**
+     *Project Name: price
+     *File Name:    GarlicPriceController.java
+     *Package Name: com.yun.price.garlic.controller
+     *Date:         2016年6月23日 下午3:23:46
+     *Copyright (c) 2016,578888218@qq.com All Rights Reserved.
+    */
+     
+    package com.yun.price.garlic.controller;
+     
+    import java.io.IOException;
+    import java.util.Date;
+    import java.util.List;
+     
+    import javax.annotation.Resource;
+    import javax.servlet.http.HttpServletRequest;
+    import javax.servlet.http.HttpSession;
+     
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RequestMethod;
+    import org.springframework.web.bind.annotation.ResponseBody;
+    import org.springframework.web.context.request.RequestContextHolder;
+    import org.springframework.web.context.request.ServletRequestAttributes;
+    import org.springframework.web.servlet.ModelAndView;
+    import org.springframework.web.socket.TextMessage;
+     
+    import com.google.gson.GsonBuilder;
+    import com.yun.common.entity.DataGrid;
+    import com.yun.price.garlic.dao.entity.GarlicPrice;
+    import com.yun.price.garlic.model.GarlicPriceModel;
+    import com.yun.price.garlic.service.GarlicPriceService;
+    import com.yun.websocket.MyWebSocketHandler;
+     
+    /**
+     * Title: GarlicPriceController<br/>
+     * Description:
+     * 
+     * @Company: 青岛励图高科<br/>
+     * @author: 刘云生
+     * @version: v1.0
+     * @since: JDK 1.7.0_80
+     * @Date: 2016年6月23日 下午3:23:46 <br/>
+     */
+    @Controller
+    public class GarlicPriceController {
+    	@Resource
+    	MyWebSocketHandler myWebSocketHandler;
+    	@RequestMapping(value = "GarlicPriceController/testWebSocket", method ={RequestMethod.POST,RequestMethod.GET}, produces = "application/json; charset=utf-8")
+    	@ResponseBody
+    	public String testWebSocket() throws IOException{
+    		myWebSocketHandler.sendMessageToJsp(new TextMessage(new GsonBuilder().create().toJson("\"number\":\""+"GarlicPriceController/testWebSocket"+"\"")), "AAA");
+    		return "1";
+    	}
+    	
+    }
+--------------------
+
+
+<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-websocket</artifactId>
+		<version>4.0.1.RELEASE</version>
+</dependency>  
+
+Tomcat8运行
+
+
+
