@@ -1,0 +1,13 @@
+Unity资源主要来自三个途径：（1）Unity自动打包资源 （2）Resources  (3)AssertBundle
+
+Unity自动打包资源是指的：在Unity场景之中直接使用的资源会随着场景被自动打包到游戏之中，这些资源会在场景加载时由Unity 自动加载。
+这些资源只要发在Asserts文件夹下即可。
+
+Resources资源是指的：在Unity下的Asserts目录下建立Resources文件夹，在此文件夹下放置所有资源。不论是否被场景使用，都会打包到游戏中
+缺点是：资源直接打包到游戏包体中，无法做增量更新。
+
+AssertBundle:通过编辑器脚本将资源打包成多个独立的AssertBundle。AssertBundle和游戏包体分离，通过WWW加载。
+
+Unity5相比之前的版本:AssertBundle的打包过程有所简化。前打包需要通过代码来设置需要打入包的资源并自己建立包的依赖关系，
+Unity5可以通过每个资源Inspector底部的AssetBundle下拉来指定该资源要打入哪个包，不指定就是不打包。
+
