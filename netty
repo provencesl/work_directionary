@@ -1,0 +1,8 @@
+1）启动ServerBootstrap（建立连接）
+
+新建脚本，加入ServerBootstrap的启动代码。
+
+static final boolean SSL ;
+static final int PORT;
+
+
