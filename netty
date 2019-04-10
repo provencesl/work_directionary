@@ -5,4 +5,15 @@
 static final boolean SSL ;
 static final int PORT;
 
+https://gitee.com/zwlan/renxingliao/tree/master/src/main/java/com/example/im/common/util
+
+https://github.com/vikulikov/vermilion_chat_webapp
+
+
+1）服务器端开发
+
+2）HttpServerCodec: 将请求和应答消息解码为HTTTP服务器
+3）HttpObjectAggregator:将Http消息的多个部分合成为一条完整的HTTP消息
+4）ChunkedWriteHandler:往客户端发送HTML5
+
 
